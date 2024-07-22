@@ -3,18 +3,17 @@
 mod interceptor;
 mod util;
 mod modules;
-use std::{sync::Mutex, time::Duration};
-use lazy_static::lazy_static;
+
+use std::sync::Mutex;
 use windows::Win32::{
     Foundation::HINSTANCE,
     System::{Console, SystemServices::DLL_PROCESS_ATTACH},
 };
 use win_dbg_logger::output_debug_string;
-use anyhow::Result;
-use ilhook::x64::Registers;
-use crate::interceptor::Interceptor;
 use modules::{ModuleManager};
-use crate::modules::{Check, MhyContext, ModuleType};
+use crate::modules::{Check, MhyContext};
+use lazy_static::lazy_static;
+
 fn print_log(str: &str) {
     let log_str = format!("[zzzCheckBypass] {}\n", str);
 
@@ -27,6 +26,12 @@ fn print_log(str: &str) {
 }
 
 unsafe fn thread_func() {
+
+    match util::try_get_base_address("UnityPlayer.dll") {
+        Some(_) => (),
+        None => return, 
+    };
+
     #[cfg(debug_assertions)]
     {
     Console::AllocConsole().unwrap();
@@ -35,7 +40,7 @@ unsafe fn thread_func() {
     print_log("zzz check bypass Init");
     util::disable_memprotect_guard();
     let mut module_manager = MODULE_MANAGER.lock().unwrap();
-    let checkaddr = util::pattern_scan("UnityPlayer.dll","40 53 55 57 41 55 41 57 48 83 EC 40 48 89 74 24");
+    let checkaddr = util::pattern_scan("UnityPlayer.dll","55 41 57 41 56 41 55 41 54 56 57 53 48 81 EC 98 02 00 00 48 8D AC 24 80 00 00 00 C7 45 54 F3 22");
     module_manager.enable(MhyContext::<Check>::new(checkaddr));
 }
 

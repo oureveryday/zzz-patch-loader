@@ -44,15 +44,15 @@ pub trait MhyModule {
 }
 
 pub struct MhyContext<T> {
-    pub assembly_base: Option<*mut u8>,
+    pub addr: Option<*mut u8>,
     pub interceptor: Interceptor,
     _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MhyContext<T> {
-    pub const fn new(assembly_base: Option<*mut u8>) -> Self {
+    pub const fn new(addr: Option<*mut u8>) -> Self {
         Self {
-            assembly_base,
+            addr,
             interceptor: Interceptor::new(),
             _phantom: std::marker::PhantomData,
         }

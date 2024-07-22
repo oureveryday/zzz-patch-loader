@@ -1,5 +1,3 @@
-use std::ffi::CString;
-
 use super::{MhyContext, MhyModule, ModuleType};
 use anyhow::Result;
 use ilhook::x64::Registers;
@@ -20,10 +18,14 @@ fn print_log(str: &str) {
 
 impl MhyModule for MhyContext<Check> {
     unsafe fn init(&mut self) -> Result<()> {
-        self.interceptor.attach(
-            self.assembly_base,
-            hkcheckaddr,
-        )
+        if let Some(addr) = self.addr {
+            self.interceptor.attach(
+                addr as usize,
+                hkcheckaddr,
+            )
+        } else {
+            Err(anyhow::anyhow!("addr is None"))
+        }
     }
 
     unsafe fn de_init(&mut self) -> Result<()> {
@@ -37,8 +39,10 @@ impl MhyModule for MhyContext<Check> {
 
 unsafe extern "win64" fn hkcheckaddr(reg: *mut Registers, _: usize) {
     
-    print_log(&format!("rcx: {:x}", (*reg).rcx));
-    print_log(&format!("rdx: {:x}", (*reg).rdx));
-    print_log(&format!("r8: {:x}", (*reg).r8));
-    print_log(&format!("r9: {:x}", (*reg).r9));
+    print_log(&format!("Triggered hook: {:x}", (*reg).rcx));
+    if (*reg).rcx == 8 {
+        (*reg).rcx = 17; 
+        print_log(&format!("Replaced to {}", (*reg).rcx)); 
+    }
+
 }
