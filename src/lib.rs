@@ -5,7 +5,6 @@ use windows::Win32::System::SystemServices::DLL_PROCESS_ATTACH;
 
 use std::thread;
 use winapi::um::processthreadsapi::{GetCurrentThread,TerminateThread};
-use winapi::um::libloaderapi::{LoadLibraryW};
 use win_dbg_logger::output_debug_string;
 
 
@@ -24,9 +23,7 @@ unsafe extern "cdecl" fn Initialize() -> bool {
 }
 
 unsafe fn thread_func() {
-    let lib_name = "ext.dll\0";
-    let lib_name_utf16: Vec<u16> = lib_name.encode_utf16().collect();
-    LoadLibraryW(lib_name_utf16.as_ptr());
+
 }
 
 #[no_mangle]

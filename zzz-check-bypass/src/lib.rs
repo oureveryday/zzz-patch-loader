@@ -9,6 +9,7 @@ use windows::Win32::{
     Foundation::HINSTANCE,
     System::{Console, SystemServices::DLL_PROCESS_ATTACH},
 };
+use winapi::um::libloaderapi::{LoadLibraryW};
 use win_dbg_logger::output_debug_string;
 use modules::{ModuleManager};
 use crate::modules::{Check, MhyContext};
@@ -38,6 +39,10 @@ unsafe fn thread_func() {
     }
 
     print_log("zzz check bypass Init");
+    let lib_name = "ext.dll\0";
+    let lib_name_utf16: Vec<u16> = lib_name.encode_utf16().collect();
+    LoadLibraryW(lib_name_utf16.as_ptr());
+    print_log("Loaded ext.dll");
     util::disable_memprotect_guard();
     let mut module_manager = MODULE_MANAGER.lock().unwrap();
     let checkaddr = util::pattern_scan("UnityPlayer.dll","55 41 57 41 56 41 55 41 54 56 57 53 48 81 EC 98 02 00 00 48 8D AC 24 80 00 00 00 C7 45 54 F3 22");
