@@ -2,7 +2,7 @@ use super::{MhyContext, MhyModule, ModuleType};
 use anyhow::Result;
 use ilhook::x64::Registers;
 
-pub struct Check;
+pub struct Patch2;
 
 use win_dbg_logger::output_debug_string;
 fn print_log(str: &str) {
@@ -16,12 +16,12 @@ fn print_log(str: &str) {
     output_debug_string(&log_str);
 }
 
-impl MhyModule for MhyContext<Check> {
+impl MhyModule for MhyContext<Patch2> {
     unsafe fn init(&mut self) -> Result<()> {
         if let Some(addr) = self.addr {
-            self.interceptor.attach(
+            self.interceptor.replace(
                 addr as usize,
-                hkcheckaddr,
+                hkaddr,
             )
         } else {
             Err(anyhow::anyhow!("addr is None"))
@@ -33,16 +33,11 @@ impl MhyModule for MhyContext<Check> {
     }
 
     fn get_module_type(&self) -> super::ModuleType {
-        ModuleType::Check
+        ModuleType::Patch2
     }
 }
 
-unsafe extern "win64" fn hkcheckaddr(reg: *mut Registers, _: usize) {
-    
-    print_log(&format!("Triggered hook: {:x}", (*reg).rcx));
-    if (*reg).rcx == 8 {
-        (*reg).rcx = 17; 
-        print_log(&format!("Replaced to {}", (*reg).rcx)); 
-    }
-
+unsafe extern "win64" fn hkaddr(reg: *mut Registers, _: usize, _:usize) ->usize{
+    print_log(&format!("patch2"));
+    0
 }

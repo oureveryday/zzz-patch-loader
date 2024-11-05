@@ -12,30 +12,20 @@ use windows::Win32::{
 use winapi::um::libloaderapi::{LoadLibraryW};
 use win_dbg_logger::output_debug_string;
 use modules::{ModuleManager};
-use crate::modules::{Check, MhyContext};
+use crate::modules::{Patch1, Patch2, MhyContext};
 use lazy_static::lazy_static;
 
 fn print_log(str: &str) {
     let log_str = format!("[zzzCheckBypass] {}\n", str);
-
-    #[cfg(debug_assertions)]
-    {
-        println!("{}",&log_str);
-    }
-
+    println!("{}",&log_str);
     output_debug_string(&log_str);
 }
 
 unsafe fn thread_func() {
 
-    match util::try_get_base_address("UnityPlayer.dll") {
-        Some(_) => (),
-        None => return, 
-    };
-
     #[cfg(debug_assertions)]
     {
-    Console::AllocConsole().unwrap();
+    Console::AllocConsole();
     }
 
     print_log("zzz check bypass Init");
@@ -45,8 +35,13 @@ unsafe fn thread_func() {
     print_log("Loaded ext.dll");
     util::disable_memprotect_guard();
     let mut module_manager = MODULE_MANAGER.lock().unwrap();
-    let checkaddr = util::pattern_scan("UnityPlayer.dll","55 41 57 41 56 41 55 41 54 56 57 53 48 81 EC 98 02 00 00 48 8D AC 24 80 00 00 00 C7 45 54 F3 22");
-    module_manager.enable(MhyContext::<Check>::new(checkaddr));
+    let addr1 = util::pattern_scan("UnityPlayer.dll","55 41 56 56 57 53 48 81 EC 00 01 00 00 48 8D AC 24 80 00 00 00 C7 45 7C 00 00 00 00");
+    let addr2 = util::pattern_scan("UnityPlayer.dll","48 81 EC 98 02 00 00 48 8B 05 BA 26 05 02");
+    print_log(&format!("addr1: {:?}", addr1));
+    print_log(&format!("addr2: {:?}", addr2));
+    module_manager.enable(MhyContext::<Patch1>::new(addr1));
+    module_manager.enable(MhyContext::<Patch2>::new(addr2));
+    print_log(&format!("Hooked."));
 }
 
 lazy_static! {
@@ -56,7 +51,7 @@ lazy_static! {
 #[no_mangle]
 unsafe extern "system" fn DllMain(_: HINSTANCE, call_reason: u32, _: *mut ()) -> bool {
     if call_reason == DLL_PROCESS_ATTACH {
-        std::thread::spawn(|| thread_func());
+        thread_func()
     }
 
     true

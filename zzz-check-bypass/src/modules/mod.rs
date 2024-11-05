@@ -4,9 +4,11 @@ use anyhow::Result;
 
 use crate::interceptor::Interceptor;
 
-mod check;
+mod patch1;
+mod patch2;
 
-pub use check::Check;
+pub use patch1::Patch1;
+pub use patch2::Patch2;
 
 #[derive(Default)]
 pub struct ModuleManager {
@@ -34,7 +36,7 @@ impl ModuleManager {
 
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
 pub enum ModuleType {
-    Check,
+    Patch1, Patch2
 }
 
 pub trait MhyModule {
