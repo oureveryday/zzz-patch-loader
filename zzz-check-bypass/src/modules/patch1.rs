@@ -37,7 +37,7 @@ impl MhyModule for MhyContext<Patch1> {
     }
 }
 
-unsafe extern "win64" fn hkaddr(reg: *mut Registers, _: usize, _:usize) ->usize{
+unsafe extern "win64" fn hkaddr(_reg: *mut Registers, _: usize, _:usize) ->usize{
     print_log(&format!("patch1"));
     0
 }

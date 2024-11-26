@@ -1,4 +1,6 @@
 #![feature(str_from_utf16_endian)]
+#![allow(unused_must_use)]
+#![allow(unused_imports)]
 
 mod interceptor;
 mod util;
@@ -9,7 +11,12 @@ use windows::Win32::{
     Foundation::HINSTANCE,
     System::{Console, SystemServices::DLL_PROCESS_ATTACH},
 };
-use winapi::um::libloaderapi::{LoadLibraryW};
+use std::panic;
+use std::ffi::CString;
+use std::path::Path;
+use std::ptr::null_mut;
+use winapi::um::libloaderapi::{LoadLibraryW,GetModuleFileNameA};
+use winapi::um::winuser::{MessageBoxA, MB_OK, MB_ICONERROR};
 use win_dbg_logger::output_debug_string;
 use modules::{ModuleManager};
 use crate::modules::{Patch1, Patch2, MhyContext};
@@ -28,16 +35,36 @@ unsafe fn thread_func() {
     Console::AllocConsole();
     }
 
+    #[cfg(not(debug_assertions))]
+    {
+        panic::set_hook(Box::new(|panic_info| {
+            let message = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+                s
+            } else {
+                "Unknown panic occurred!\nPlease update bypass.\n(For more info use debug version)"
+            };
+    
+            let c_message = CString::new(message).unwrap();
+            let c_title = CString::new("Panic occurred!").unwrap();
+    
+            unsafe {
+                MessageBoxA(null_mut(), c_message.as_ptr(), c_title.as_ptr(), MB_OK | MB_ICONERROR);
+            }
+        }));
+    }
+    
+
     print_log("zzz check bypass Init");
     let lib_name = "ext.dll\0";
     let lib_name_utf16: Vec<u16> = lib_name.encode_utf16().collect();
     LoadLibraryW(lib_name_utf16.as_ptr());
     print_log("Loaded ext.dll");
     util::disable_memprotect_guard();
+    print_log("Disabled VMP.");
     let mut module_manager = MODULE_MANAGER.lock().unwrap();
     let addr1 = util::pattern_scan("UnityPlayer.dll","55 41 56 56 57 53 48 81 EC 00 01 00 00 48 8D AC 24 80 00 00 00 C7 45 7C 00 00 00 00");
-    let addr2 = util::pattern_scan("UnityPlayer.dll","48 81 EC 98 02 00 00 48 8B 05 BA 26 05 02");
     print_log(&format!("addr1: {:?}", addr1));
+    let addr2 = util::pattern_scan("UnityPlayer.dll","48 81 EC 98 02 00 00 48 8B 05 ? ? ? 02");
     print_log(&format!("addr2: {:?}", addr2));
     module_manager.enable(MhyContext::<Patch1>::new(addr1));
     module_manager.enable(MhyContext::<Patch2>::new(addr2));
@@ -50,7 +77,17 @@ lazy_static! {
 
 #[no_mangle]
 unsafe extern "system" fn DllMain(_: HINSTANCE, call_reason: u32, _: *mut ()) -> bool {
-    if call_reason == DLL_PROCESS_ATTACH {
+        if call_reason == DLL_PROCESS_ATTACH {
+        let mut buffer = vec![0u8; 260];
+        let len = GetModuleFileNameA(null_mut(), buffer.as_mut_ptr() as *mut i8, buffer.len() as u32);
+        if len > 0 {
+            let exe_path = String::from_utf8_lossy(&buffer[..len as usize]);
+            let exe_name = Path::new(exe_path.as_ref()).file_name().unwrap().to_str().unwrap();
+            if exe_name != "ZenlessZoneZeroBeta.exe" {
+                print_log("Patch not running in game, exiting...");
+                return true;
+            }
+        }
         thread_func()
     }
 
