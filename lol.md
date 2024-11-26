@@ -1,4 +1,4 @@
-# 1.3.0
+# 1.4.2
 
 ## Decrypt
 
@@ -19,3 +19,7 @@
 ## Check
 
 48 81 EC 98 02 00 00
+
+## ACMain
+
+After `rocess is running in low integrity mod` and before `GameAssembly.dll` string...

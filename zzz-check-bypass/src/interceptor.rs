@@ -46,4 +46,11 @@ impl Interceptor {
         self.hooks.push(hook_point);
         Ok(())
     }
+
+    pub unsafe fn detach(&mut self) -> Result<()> {
+        for hook in self.hooks.drain(..) {
+            hook.unhook()?; // 使用可变引用来调用方法
+        }
+        Ok(())
+    }
 }
