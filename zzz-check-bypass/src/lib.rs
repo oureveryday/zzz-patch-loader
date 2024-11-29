@@ -62,7 +62,7 @@ unsafe fn thread_func() {
     util::disable_memprotect_guard();
     print_log("Disabled VMP.");
     let mut module_manager = MODULE_MANAGER.lock().unwrap();
-    let addr1 = util::pattern_scan("UnityPlayer.dll","48 81 EC 98 02 00 00 48 8B 05 ? ? ? 02");
+    let addr1 = util::pattern_scan("UnityPlayer.dll","48 81 EC 98 02 00 00 48 8B 05 ?? ?? ?? 02");
     print_log(&format!("addr1: {:?}", addr1));
     module_manager.enable(MhyContext::<Patch1>::new(addr1));
     print_log(&format!("Hooked."));

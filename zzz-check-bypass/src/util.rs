@@ -96,7 +96,7 @@ pub unsafe fn pattern_scan(module: &str, pattern: &str) -> Option<*mut u8> {
     let memory_slice: &[u8] = unsafe { slice::from_raw_parts(module_handle_ptr, size_of_image) };
     let mut cursor = Cursor::new(memory_slice);
      
-    let loc = scan_first_match(&mut cursor, pattern).unwrap();
+    let loc = scan_first_match(&mut cursor, pattern.replace("??", "?").as_str()).unwrap();
     match loc {
         None => None,
         Some(loc) => Some((module_handle_ptr.wrapping_add(loc)) as *mut u8),
