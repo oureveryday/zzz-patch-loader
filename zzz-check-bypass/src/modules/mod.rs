@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
-use crate::interceptor::Interceptor;
+use crate::interceptor_veh::InterceptorVeh;
 
 mod patch1;
 
@@ -45,15 +45,15 @@ pub trait MhyModule {
 
 pub struct MhyContext<T> {
     pub addr: Option<*mut u8>,
-    pub interceptor: Interceptor,
+    pub interceptor: InterceptorVeh,
     _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MhyContext<T> {
-    pub const fn new(addr: Option<*mut u8>) -> Self {
+    pub fn new(addr: Option<*mut u8>) -> Self {
         Self {
             addr,
-            interceptor: Interceptor::new(),
+            interceptor: unsafe { InterceptorVeh::new() }.unwrap(),
             _phantom: std::marker::PhantomData,
         }
     }
