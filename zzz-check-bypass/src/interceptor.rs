@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use anyhow::{bail, Result};
 use ilhook::x64::{
     CallbackOption, HookFlags, HookPoint, HookType, Hooker, JmpBackRoutine, RetnRoutine,
