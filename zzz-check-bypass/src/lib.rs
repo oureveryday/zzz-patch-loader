@@ -113,7 +113,7 @@ unsafe extern "system" fn DllMain(_: HINSTANCE, call_reason: u32, _: *mut ()) ->
                 .unwrap()
                 .to_str()
                 .unwrap();
-            if exe_name != "ZenlessZoneZeroBeta.exe" {
+            if exe_name == "UnityCrashHandler64.exe" {
                 print_log("Patch not running in game, exiting...");
                 return true;
             }
